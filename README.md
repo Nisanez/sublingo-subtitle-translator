@@ -1,37 +1,36 @@
 # SubTranslate
 
-**A local AI subtitle translator.** SubTranslate is a desktop app (Electron) that
-translates `.srt` subtitle files using a model running locally through
-[Ollama](https://ollama.com). Your subtitles never leave your machine — there is no cloud
-service involved.
+**מתרגם כתוביות מקומי מבוסס בינה מלאכותית.** SubTranslate היא אפליקציית דֶּסקטוֹפ (Electron)
+שמתרגמת קובצי כתוביות `.srt` באמצעות מודל שרץ מקומית דרך [Ollama](https://ollama.com).
+הכתוביות שלך לעולם לא עוזבות את המחשב — אין שום שירות ענן מעורב.
 
-It does more than translate line-by-line: it merges subtitle fragments into whole
-sentences before translating, then redistributes the result back across the original timed
-cues, so the output reads naturally **and** keeps every timestamp intact.
+האפליקציה עושה יותר מתרגום שורה-שורה: היא מאחדת קטעי כתובית למשפטים שלמים לפני התרגום,
+ואז מפזרת את התוצאה בחזרה על פני הכתוביות המתוזמנות המקוריות — כך שהפלט נקרא טבעי **וגם**
+שומר על כל חותמות הזמן במדויק.
 
-> A fun project built with the help of [Claude](https://claude.ai).
+> פרויקט כיף שנבנה בעזרת [Claude](https://claude.ai).
 
 ---
 
-## Features
+## יכולות
 
-- 🖥️ **Fully local & private** — translation runs on your machine via Ollama. No API keys, no cloud.
-- 🧠 **Sentence-aware translation** — merges fragmented cues into full sentences for better grammar, then splits the translation back to the original cues.
-- 🗒️ **Glossary** — lock exact translations for names/terms; auto-extract proper-noun candidates from a file.
-- 📝 **Background context** — give the model a short show/episode brief (any language) for consistent tone and names.
-- ↔️ **Side-by-side viewer** — original and translated cues, scroll-synced.
-- ⏱️ **Timestamps preserved** — only the text changes; indices and timing are untouched.
-- 🎛️ **Configurable** — Ollama host, model, source/target language, batch size, and more.
-- 🔌 **Robust Ollama handling** — clear messages when Ollama is unreachable, the model is missing, or a request times out.
-- 🪟 **Wide / vertical (9:16) window** for screen recording.
+- 🖥️ **מקומי ופרטי לחלוטין** — התרגום רץ במחשב שלך דרך Ollama. ללא מפתחות API, ללא ענן.
+- 🧠 **תרגום מודע-משפטים** — מאחד כתוביות מקוטעות למשפטים שלמים לדקדוק טוב יותר, ואז מחלק את התרגום בחזרה לכתוביות המקוריות.
+- 🗒️ **מילון מונחים (Glossary)** — נעילת תרגומים מדויקים לשמות/מונחים; חילוץ אוטומטי של שמות פרטיים מתוך קובץ.
+- 📝 **הקשר רקע** — מסירת תקציר קצר של הסדרה/הפרק למודל (בכל שפה) לעקביות בטון ובשמות.
+- ↔️ **תצוגה זה-לצד-זה** — כתוביות מקור ותרגום, עם גלילה מסונכרנת.
+- ⏱️ **שמירה על חותמות זמן** — רק הטקסט משתנה; האינדקסים והתזמון נשארים כפי שהם.
+- 🎛️ **ניתן להגדרה** — כתובת שרת Ollama, מודל, שפת מקור/יעד, גודל אצווה ועוד.
+- 🔌 **טיפול חסין ב-Ollama** — הודעות ברורות כש-Ollama לא זמין, כשהמודל חסר, או כשבקשה חורגת מהזמן.
+- 🪟 **חלון רחב / אנכי (9:16)** להקלטת מסך.
 
-## Requirements
+## דרישות מקדימות
 
-- **[Node.js](https://nodejs.org/) 18 or newer**
-- **[Ollama](https://ollama.com)** installed and running, with at least one model pulled
-  (Ollama is **not** bundled — install it separately).
+- **[Node.js](https://nodejs.org/) גרסה 18 ומעלה**
+- **[Ollama](https://ollama.com)** מותקן ופועל, עם מודל אחד לפחות שהורד
+  (Ollama **לא** מצורף לאפליקציה — יש להתקין בנפרד).
 
-## Install
+## התקנה
 
 ```bash
 git clone https://github.com/your-username/subtranslate.git
@@ -39,110 +38,108 @@ cd subtranslate
 npm install
 ```
 
-## Install Ollama and pull a model
+## התקנת Ollama והורדת מודל
 
-1. Install Ollama from **https://ollama.com**.
-2. Start it (it usually runs automatically; otherwise run `ollama serve`).
-3. Pull a model, for example:
+1. התקן את Ollama מהאתר הרשמי: **https://ollama.com**.
+2. הפעל אותו (בדרך כלל רץ אוטומטית; אחרת הרץ `ollama serve`).
+3. הורד מודל, לדוגמה:
 
    ```bash
    ollama pull llama3.1:8b
-   # other options:
+   # אפשרויות נוספות:
    ollama pull gemma3:12b
-   ollama pull aya-expanse:8b      # strong multilingual model
+   ollama pull aya-expanse:8b      # מודל רב-לשוני חזק
    ```
 
-Any chat-capable Ollama model works; multilingual models give the best translations.
+כל מודל צ'אט ב-Ollama יעבוד; מודלים רב-לשוניים נותנים את התרגומים הטובים ביותר.
 
-## Run (development)
+## הרצה (פיתוח)
 
 ```bash
 npm start
 ```
 
-## Build / package
+## בנייה / אריזה
 
-Create a distributable app with [electron-builder](https://www.electron.build/):
+יצירת קובץ התקנה באמצעות [electron-builder](https://www.electron.build/):
 
 ```bash
 npm run dist
 ```
 
-The first run downloads platform build tools; output lands in `dist/`. Targets: Windows
-(NSIS), macOS (dmg), Linux (AppImage).
+ההרצה הראשונה מורידה את כלי הבנייה לפלטפורמה; הפלט נוצר בתיקיית `dist/`.
+יעדים: Windows ‏(NSIS), macOS ‏(dmg), Linux ‏(AppImage).
 
-## Usage
+## אופן השימוש
 
-1. **Drop or browse** an `.srt` file. The original cues appear in a scrollable list.
-2. (Optional) Paste a **Background & Context** brief, or click **Copy context prompt** to
-   generate one with another AI and paste it back.
-3. (Optional) Attach a **glossary** or click **Scan for names** to build one.
-4. Choose **target language** and **model**.
-5. Set the **output file** name and folder.
-6. Click **Translate Subtitles** — watch it stream into the translated pane, then **Save**.
+1. **גרור או בחר** קובץ `.srt`. כתוביות המקור מופיעות ברשימה הניתנת לגלילה.
+2. (אופציונלי) הדבק **רקע והקשר**, או לחץ **Copy context prompt** כדי לייצר אותו בעזרת בינה מלאכותית אחרת ולהדביק בחזרה.
+3. (אופציונלי) צרף **מילון מונחים** או לחץ **Scan for names** כדי לבנות אחד.
+4. בחר **שפת יעד** ו**מודל**.
+5. הגדר את **שם קובץ הפלט** והתיקייה.
+6. לחץ **Translate Subtitles** — צפה בתרגום זורם לחלונית התרגום, ואז **שמור**.
 
-Use **Preview prompt** any time to see exactly what will be sent to the model.
+השתמש ב-**Preview prompt** בכל רגע כדי לראות בדיוק מה יישלח למודל.
 
-## Configuration
+## הגדרות
 
-| Setting | Where | Default |
+| הגדרה | היכן | ברירת מחדל |
 |---|---|---|
-| Ollama host | "Ollama host" field (Model section) or `OLLAMA_URL` env var | `http://localhost:11434` |
-| Model | Model dropdown (lists your installed models) or "Custom…" | first multilingual / first installed |
-| Source / target language | Languages fields | source optional, target `Hebrew` |
-| Batch size, context lines, max group blocks, sentence mode | Advanced | 20 / 3 / 4 / on |
-| Output name & folder | Output file card | `<input>.<lang>.srt`, input's folder |
+| כתובת שרת Ollama | שדה "Ollama host" (במקטע Model) או משתנה הסביבה `OLLAMA_URL` | `http://localhost:11434` |
+| מודל | תפריט המודלים (מציג את המודלים המותקנים) או "Custom…" | רב-לשוני ראשון / מותקן ראשון |
+| שפת מקור / יעד | שדות השפה | מקור אופציונלי, יעד `Hebrew` |
+| גודל אצווה, שורות הקשר, מקס׳ בלוקים בקבוצה, מצב משפטים | Advanced | 20 / 3 / 4 / פעיל |
+| שם ותיקיית פלט | כרטיס Output file | `<input>.<lang>.srt`, תיקיית המקור |
 
-Settings persist between launches (stored in Electron's user-data folder). See
-`.env.example` for the optional `OLLAMA_URL` override.
+ההגדרות נשמרות בין הרצות (בתיקיית נתוני-המשתמש של Electron). ראה `.env.example`
+לעקיפה האופציונלית של `OLLAMA_URL`.
 
-## Supported formats
+## פורמטים נתמכים
 
-Currently **`.srt` (SubRip)** only. Other subtitle formats are on the roadmap.
+כרגע **`.srt` (SubRip)** בלבד. פורמטים אחרים מתוכננים במפת הדרכים.
 
-## Privacy
+## פרטיות
 
-SubTranslate sends your subtitles only to the Ollama server you configure (by default a
-local one at `http://localhost:11434`). **This app does not send your data to any cloud
-service.** If you point it at a remote Ollama host, your text goes there instead — that's
-your choice.
+SubTranslate שולחת את הכתוביות שלך רק לשרת ה-Ollama שהגדרת (כברירת מחדל שרת מקומי בכתובת
+`http://localhost:11434`). **האפליקציה הזו אינה שולחת את הנתונים שלך לשום שירות ענן.**
+אם תכוון אותה לשרת Ollama מרוחק — הטקסט יישלח לשם, וזו בחירה שלך.
 
-## Troubleshooting
+## פתרון תקלות
 
-- **"Can't reach Ollama"** — Ollama isn't installed or running. Install it from
-  https://ollama.com and ensure `ollama serve` is up; then click **Retry**.
-- **"Model is not installed"** — pull it: `ollama pull <model>` (the message shows the
-  exact command), then **Recheck**.
-- **No models in the dropdown** — pull at least one model and click **Recheck**.
-- **"Request timed out"** — large batches on a slow machine can exceed the timeout; reduce
-  **Batch size** in Advanced, or try a smaller model.
-- **Window won't stay open / GPU errors** — hardware acceleration is already disabled; if
-  issues persist, update your GPU drivers.
+- **"Can't reach Ollama"** — Ollama אינו מותקן או אינו פועל. התקן מ-https://ollama.com
+  וודא ש-`ollama serve` פעיל; לאחר מכן לחץ **Retry**.
+- **"Model is not installed"** — הורד אותו: `ollama pull <model>` (ההודעה מציגה את הפקודה
+  המדויקת), ואז לחץ **Recheck**.
+- **אין מודלים בתפריט** — הורד מודל אחד לפחות ולחץ **Recheck**.
+- **"Request timed out"** — אצוות גדולות על מחשב איטי עלולות לחרוג מהזמן; הקטן את
+  **Batch size** ב-Advanced, או נסה מודל קטן יותר.
+- **החלון לא נשאר פתוח / שגיאות GPU** — האצת חומרה כבר מושבתת; אם הבעיה נמשכת, עדכן את
+  מנהלי ההתקן של כרטיס המסך.
 
-## Limitations
+## מגבלות
 
-- `.srt` only (for now).
-- Translation quality depends on the Ollama model you choose; small models may still make
-  mistakes — the glossary and context brief help a lot.
-- The renderer transpiles JSX in-browser via Babel standalone (no build step); fine for
-  this app's size, but not a pattern for large apps.
+- `.srt` בלבד (בינתיים).
+- איכות התרגום תלויה במודל ה-Ollama שתבחר; מודלים קטנים עדיין עלולים לטעות — מילון המונחים
+  ותקציר ההקשר עוזרים מאוד.
+- ה-renderer מתרגם JSX בתוך הדפדפן באמצעות Babel standalone (ללא שלב בנייה); מתאים לגודל
+  של אפליקציה זו, אך אינו דפוס מומלץ לאפליקציות גדולות.
 
-## Roadmap
+## מפת דרכים
 
-- Additional formats (`.vtt`, `.ass`).
-- Streaming token output in the live preview.
-- Batch-translate multiple files.
-- Optional second-pass consistency check.
+- פורמטים נוספים (`.vtt`, `.ass`).
+- הצגת טוקנים בזמן אמת בתצוגה החיה.
+- תרגום אצווה של מספר קבצים.
+- מעבר שני אופציונלי לבדיקת עקביות.
 
-## Contributing
+## תרומה לפרויקט
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Issues and PRs are welcome.
+ראה [CONTRIBUTING.md](CONTRIBUTING.md). דיווחי באגים ובקשות משיכה (PR) יתקבלו בברכה.
 
-## Credits / third-party
+## קרדיטים / צד שלישי
 
-Vendored in `renderer/vendor/` for offline use: **React**, **ReactDOM**, **Babel
-standalone**, and **Tailwind CSS** — all MIT-licensed and © their respective authors.
+מצורפים בתיקיית `renderer/vendor/` לשימוש לא-מקוון: **React**, **ReactDOM**,
+**Babel standalone** ו-**Tailwind CSS** — כולם ברישיון MIT וזכויות היוצרים שלהם שמורות ליוצריהם.
 
-## License
+## רישיון
 
 [MIT](LICENSE) © 2026 SubTranslate contributors.
