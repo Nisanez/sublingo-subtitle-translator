@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local env / config
+.env
+*.local
+
+# Subtitle files (don't commit personal/copyrighted media)
+*.srt
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

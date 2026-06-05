@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Syntax-check main process & engine
+        run: |
+          node --check main.js
+          node --check preload.js
+          node --check engine.js
+          node --check cli.js
+
+      - name: Type-check renderer JSX compiles
+        run: |
+          node -e "const fs=require('fs');const m=fs.readFileSync('renderer/index.html','utf8').match(/<script type=\"text\/babel\">([\s\S]*?)<\/script>/);require('./renderer/vendor/babel.min.js').transform(m[1],{presets:['react']});console.log('renderer JSX OK')"
+
+      - name: Run engine tests
+        run: npm test

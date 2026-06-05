@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SubTranslate — AI Subtitle Translation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="vendor/tailwind.js"></script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif'],mono:['"JetBrains Mono"','Menlo','monospace']}}}};</script>
+  <style>
+    :root{
+      --bg:#0B0D10;--sur:rgba(255,255,255,0.042);--sur-hi:rgba(255,255,255,0.075);
+      --bdr:rgba(255,255,255,0.08);--bdr-hi:rgba(255,255,255,0.14);
+      --tx:#E2E8F0;--tx2:#8892A0;--tx3:#4A5468;
+      --tc:#00C8B0;--vc:#7B5FF5;
+      --in-bg:rgba(255,255,255,0.06);--code-bg:rgba(0,0,0,0.48);--dz-bdr:rgba(255,255,255,0.17);
+    }
+    [data-theme="light"]{
+      --bg:#EDEAD3;--sur:rgba(255,255,255,0.72);--sur-hi:rgba(255,255,255,0.92);
+      --bdr:rgba(0,0,0,0.09);--bdr-hi:rgba(0,0,0,0.16);
+      --tx:#1A1C22;--tx2:#5A6070;--tx3:#9AA0B0;
+      --in-bg:rgba(255,255,255,0.85);--code-bg:rgba(0,0,0,0.055);--dz-bdr:rgba(0,0,0,0.18);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-font-smoothing:antialiased}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 75% 65% at 12% 8%,rgba(0,200,176,0.055) 0%,transparent 65%),radial-gradient(ellipse 60% 55% at 90% 90%,rgba(123,95,245,0.065) 0%,transparent 65%)}
+    [data-theme="light"] body::before{background:radial-gradient(ellipse 75% 65% at 12% 8%,rgba(0,200,176,0.04) 0%,transparent 65%),radial-gradient(ellipse 60% 55% at 90% 90%,rgba(123,95,245,0.04) 0%,transparent 65%)}
+    body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0.026;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px 200px}
+    [data-theme="light"] body::after{opacity:0.014}
+    .glass{background:var(--sur);border:1px solid var(--bdr);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:16px;box-shadow:0 6px 28px rgba(0,0,0,0.22),inset 0 1px 0 rgba(255,255,255,0.07)}
+    [data-theme="light"] .glass{box-shadow:0 4px 20px rgba(0,0,0,0.07),inset 0 1px 0 rgba(255,255,255,0.8)}
+    .g-text{background:linear-gradient(135deg,var(--tc),var(--vc));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .btn-p{background:linear-gradient(135deg,var(--tc),var(--vc));color:#fff;border:none;border-radius:13px;padding:14px 24px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:transform .22s ease,box-shadow .22s ease,filter .22s;display:flex;align-items:center;justify-content:center;gap:9px}
+    .btn-p:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(0,200,176,0.32),0 4px 14px rgba(123,95,245,0.22);filter:brightness(1.08)}
+    .btn-p:active{transform:translateY(0);filter:brightness(.97)}.btn-p:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+    .btn-s{background:var(--sur);border:1px solid var(--bdr);color:var(--tx2);border-radius:9px;padding:8px 14px;font-size:12.5px;font-weight:500;font-family:inherit;cursor:pointer;transition:background .18s,color .18s,transform .18s,border-color .18s;display:flex;align-items:center;gap:6px}
+    .btn-s:hover{background:var(--sur-hi);color:var(--tx);transform:translateY(-1px);border-color:var(--bdr-hi)}
+    .sf-in{width:100%;background:var(--in-bg);border:1px solid var(--bdr);border-radius:10px;color:var(--tx);padding:10px 13px;font-size:13.5px;font-family:inherit;outline:none;transition:border-color .18s,box-shadow .18s}
+    .sf-in:focus{border-color:rgba(0,200,176,.55);box-shadow:0 0 0 3px rgba(0,200,176,.1)}.sf-in::placeholder{color:var(--tx3)}
+    .sf-ta{resize:vertical;min-height:148px;line-height:1.7}
+    .sf-sel{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238892A0' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:34px;cursor:pointer}
+    .sf-sel option{background:var(--bg);color:var(--tx)}
+    .sf-num{width:72px;text-align:center;-moz-appearance:textfield}.sf-num::-webkit-inner-spin-button,.sf-num::-webkit-outer-spin-button{-webkit-appearance:none}
+    .dz{border:1.5px dashed var(--dz-bdr);border-radius:16px;cursor:pointer;transition:all .28s ease}
+    .dz:hover{border-color:rgba(0,200,176,.45);background:rgba(0,200,176,.018)}
+    .dz.over{border-color:var(--tc);background:rgba(0,200,176,.04);transform:scale(1.012);box-shadow:0 0 48px rgba(0,200,176,.13),inset 0 0 24px rgba(0,200,176,.04)}
+    .code-b{font-family:'JetBrains Mono',Menlo,monospace;font-size:12px;background:var(--code-bg);border:1px solid var(--bdr);border-radius:12px;padding:15px 18px;line-height:1.85;overflow-x:auto;white-space:pre-wrap;word-break:break-all}
+    .hl-py{color:#6C7A8C}.hl-sc{color:var(--tc);font-weight:600}.hl-fl{color:#A78BFA}.hl-vl{color:var(--tx)}.hl-ar{color:var(--tx3)}
+    .tc-chip{font-family:'JetBrains Mono',Menlo,monospace;font-size:10.5px;background:rgba(0,200,176,.08);border:1px solid rgba(0,200,176,.22);border-radius:5px;padding:2px 7px;color:var(--tc);display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+    [data-theme="light"] .tc-chip{background:rgba(0,180,160,.07);border-color:rgba(0,180,160,.25)}
+    .slabel{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--tx3)}
+    .pbar{height:3px;background:var(--bdr);border-radius:2px;overflow:hidden}.pbar-f{height:100%;background:linear-gradient(90deg,var(--tc),var(--vc));border-radius:2px;transition:width .25s ease}
+    .tog{width:36px;height:20px;background:var(--bdr-hi);border-radius:10px;position:relative;cursor:pointer;border:none;outline:none;flex-shrink:0;transition:background .22s}
+    .tog.on{background:linear-gradient(135deg,var(--tc),var(--vc))}.tog::after{content:'';position:absolute;width:14px;height:14px;background:white;border-radius:50%;top:3px;left:3px;transition:transform .2s ease;box-shadow:0 1px 4px rgba(0,0,0,.28)}.tog.on::after{transform:translateX(16px)}
+    .hf{background:#060810;border-radius:12px;overflow:hidden;aspect-ratio:16/9;position:relative;display:flex;align-items:flex-end;justify-content:center;padding:0 32px 24px}
+    .hf::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(transparent 0px,transparent 1px,rgba(0,0,0,0.04) 1px,rgba(0,0,0,0.04) 2px);pointer-events:none;z-index:1}
+    .hf-sub{position:relative;z-index:2;direction:rtl;text-align:center;font-size:18px;font-weight:500;color:white;text-shadow:0 2px 12px rgba(0,0,0,.95),0 0 30px rgba(0,0,0,.7);line-height:1.45;letter-spacing:.01em}
+    ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+    [data-theme="light"] ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12)}
+    #root{position:relative;z-index:1;min-height:100vh}
+    .workspace{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:24px 28px 60px;max-width:1460px;margin:0 auto}
+    @media(max-width:960px){.workspace{grid-template-columns:1fr}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes streamIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+    .spin{animation:spin 1s linear infinite}.pulse-dot{animation:pulse 2.2s ease-in-out infinite}
+    .slide-up{animation:slideUp .3s ease-out forwards}.stream-in{animation:streamIn .4s ease-out forwards}
+    .cue{padding:10px 13px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:10px;transition:background .18s}
+    .cue:hover{background:rgba(255,255,255,.04)}
+    [data-theme="light"] .cue{background:rgba(0,0,0,.025);border-color:rgba(0,0,0,.06)}
+    .fs{display:flex;gap:2.5px}.fs-h{width:8px;height:11px;background:var(--sur-hi);border-radius:2px}
+    .sf-radio{accent-color:var(--tc);width:14px;height:14px;cursor:pointer}
+    .divider{height:1px;background:var(--bdr);margin:16px 0}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:9997;display:flex;align-items:center;justify-content:center;padding:32px}
+    .cmpgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.cmpgrid{grid-template-columns:1fr}}
+    /* Vertical (9:16) layout — forced single column for portrait windows / screen-share */
+    .app.vertical .workspace{grid-template-columns:1fr;max-width:600px;gap:16px}
+    .app.vertical .fullw{max-width:600px}
+    .app.vertical .cmpgrid{grid-template-columns:1fr}
+    .app.vertical .sublist{max-height:300px}
+    .sublist{display:flex;flex-direction:column;gap:6px;max-height:440px;overflow-y:auto;padding-right:4px}
+    .fullw{padding:0 28px 60px;max-width:1460px;margin:0 auto}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="vendor/react.js"></script>
+  <script src="vendor/react-dom.js"></script>
+  <script src="vendor/babel.min.js"></script>
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+    const SF = window.subtranslate;        // Electron bridge (undefined when opened in a plain browser)
+
+    // ── Icons ─────────────────────────────────────────────
+    const sv = (...ds) => function Ico({ size=16, color='currentColor', style, className }) {
+      return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={style} className={className}>{ds.map((d,i)=><path key={i} d={d}/>)}</svg>;
+    };
+    const FilmIco    = sv('M2 2h20v20H2zM7 2v20M17 2v20M2 7h5M17 7h5M2 12h5M17 12h5M2 17h5M17 17h5');
+    const UploadIco  = sv('M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4','M17 8l-5-5-5 5','M12 3v12');
+    const CopyIco    = sv('M20 9h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2z','M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1');
+    const CheckIco   = sv('M20 6 9 17l-5-5');
+    const ChevDownIco= sv('m6 9 6 6 6-6');
+    const ChevUpIco  = sv('m18 15-6-6-6 6');
+    const ChevRightIco= sv('m9 18 6-6-6-6');
+    const ColumnsIco = sv('M3 4h7v16H3z','M14 4h7v16h-7z');
+    const RowsIco     = sv('M4 4h16v7H4z','M4 13h16v7H4z');
+    const XmarkIco   = sv('M18 6 6 18','M6 6l12 12');
+    const FileIco    = sv('M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z','M14 2v6h6','M16 13H8','M16 17H8');
+    const BookIco    = sv('M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z','M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 0 3-3h7z');
+    const StarsIco   = sv('m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z');
+    const GlobeIco   = sv('M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z','M12 2a14.5 14.5 0 0 1 0 20 14.5 14.5 0 0 1 0-20','M2 12h20');
+    const SlidersIco = sv('M20 7h-9','M14 17H5','M17 17a3 3 0 1 0 0-6z','M7 7a3 3 0 1 0 0 6z');
+    const ClipIco    = sv('M21.4 11.1l-9.2 9.2a6 6 0 0 1-8.5-8.5l8.6-8.6A4 4 0 0 1 18 8.8l-8.6 8.6a2 2 0 0 1-2.8-2.8l8.5-8.5');
+    const PlayIco    = sv('m5 3 14 9-14 9V3z');
+    const DlIco      = sv('M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4','M7 10l5 5 5-5','M12 15V3');
+    const SpinIco    = sv('M21 12a9 9 0 1 1-6.2-8.6');
+    const ListIco    = sv('M8 6h13','M8 12h13','M8 18h13','M3 6h.01','M3 12h.01','M3 18h.01');
+    const MoonIco    = sv('M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z');
+    const SunIco     = sv('M12 2v2','M12 20v2','M4.9 4.9l1.4 1.4','M17.7 17.7l1.4 1.4','M2 12h2','M20 12h2','M6.3 17.7l-1.4 1.4','M19.1 4.9l-1.4 1.4','M12 17a5 5 0 1 0 0-10z');
+    const EyeIco     = sv('M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z','M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z');
+    const StopIco    = sv('M6 6h12v12H6z');
+    const ScanIco    = sv('M3 7V5a2 2 0 0 1 2-2h2','M17 3h2a2 2 0 0 1 2 2v2','M21 17v2a2 2 0 0 1-2 2h-2','M7 21H5a2 2 0 0 1-2-2v-2','M7 12h10');
+    const FolderIco  = sv('M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z');
+    const CpuIco = ({size=16,color='currentColor',style}) => (
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={style}>
+        <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+        <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/>
+      </svg>
+    );
+
+    // ── Utils ─────────────────────────────────────────────
+    function parseSRT(text) {
+      const blocks=[], segs=text.replace(/\r\n/g,'\n').trim().split(/\n\n+/);
+      for (const seg of segs) {
+        const lines=seg.split('\n'); if(lines.length<3) continue;
+        const idx=parseInt(lines[0]);
+        const m=lines[1].match(/(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/);
+        if(!m||isNaN(idx)) continue;
+        blocks.push({index:idx,start:m[1],end:m[2],text:lines.slice(2).join('\n').trim()});
+      }
+      return blocks;
+    }
+    const fmtBytes = b => b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(2)+' MB';
+    const fmtDur   = tc => tc?tc.split(',')[0]:'00:00:00';
+
+
+    // ── Constants ──────────────────────────────────────────
+    const DEFAULT_MODELS=[
+      {value:'gemma3:12b',     label:'gemma3:12b (Recommended)'},
+      {value:'aya-expanse:8b-q8_0',label:'aya-expanse:8b-q8_0'},
+      {value:'translategemma:12b',label:'translategemma:12b'},
+      {value:'custom',         label:'Custom…'},
+    ];
+    const CTX_PROMPT=`You are preparing a CONTEXT BRIEF for a model translating the subtitles of [TITLE], [SEASON/EPISODE], into [TARGET LANGUAGE]. Write it in English with key terms in the target language. Sections: 1) Premise & setting, 2) Tone & register, 3) Key terminology (English → target, prefer official localized names), 4) Characters & relationships — include GENDER and singular/plural and nicknames, 5) Episode-specific watch-outs, 6) Style rules. Keep it ~250–400 words.`;
+
+    // ── Small components ───────────────────────────────────
+    function TCChip({start,end}) {
+      return <span className="tc-chip">{start}<span style={{opacity:.4,margin:'0 2px'}}>→</span>{end}</span>;
+    }
+    function Toast({visible,msg}) {
+      return (
+        <div style={{position:'fixed',bottom:32,left:'50%',transform:`translateX(-50%) translateY(${visible?0:10}px) scale(${visible?1:.94})`,opacity:visible?1:0,pointerEvents:'none',transition:'all .22s ease',zIndex:9998}}>
+          <div style={{background:'rgba(0,200,176,.12)',backdropFilter:'blur(20px)',border:'1px solid rgba(0,200,176,.3)',borderRadius:10,padding:'10px 18px',color:'var(--tc)',fontSize:13.5,fontWeight:500,display:'flex',alignItems:'center',gap:7,boxShadow:'0 8px 24px rgba(0,0,0,.35)',whiteSpace:'nowrap'}}>
+            <CheckIco size={14}/>{msg}
+          </div>
+        </div>
+      );
+    }
+    function PromptModal({text,onClose}) {
+      const [copied,setCopied]=useState(false);
+      if(text==null) return null;
+      return (
+        <div className="modal-bg" onClick={onClose}>
+          <div className="glass" style={{padding:22,maxWidth:780,width:'100%',maxHeight:'80vh',display:'flex',flexDirection:'column'}} onClick={e=>e.stopPropagation()}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}><EyeIco size={15} color="var(--tx2)"/><span style={{fontWeight:600,fontSize:14}}>Prompt preview — first batch</span></div>
+              <div style={{display:'flex',gap:8}}>
+                <button className="btn-s" onClick={()=>{navigator.clipboard.writeText(text);setCopied(true);setTimeout(()=>setCopied(false),1600);}}>{copied?<><CheckIco size={12} color="var(--tc)"/><span style={{color:'var(--tc)'}}>Copied</span></>:<><CopyIco size={12}/>Copy</>}</button>
+                <button className="btn-s" style={{padding:'6px 9px'}} onClick={onClose}><XmarkIco size={13}/></button>
+              </div>
+            </div>
+            <pre className="code-b" style={{overflowY:'auto',whiteSpace:'pre-wrap'}}>{text}</pre>
+          </div>
+        </div>
+      );
+    }
+
+    // ── TopBar ─────────────────────────────────────────────
+    function TopBar({theme,onToggle,ollama,vertical,onLayout}) {
+      const ok=ollama.ok===true, unknown=ollama.ok==null;
+      const col=ok?'var(--tc)':unknown?'var(--tx3)':'#F0727E';
+      const label=ok?'Ollama connected':unknown?'Checking Ollama…':'Ollama offline';
+      return (
+        <header style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'13px 28px',borderBottom:'1px solid var(--bdr)',background:theme==='dark'?'rgba(11,13,16,.88)':'rgba(237,234,211,.88)',backdropFilter:'blur(20px)',position:'sticky',top:0,zIndex:100}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <div style={{background:'linear-gradient(135deg,var(--tc),var(--vc))',borderRadius:10,padding:7,display:'flex'}}>
+              <FilmIco size={18} color="white"/>
+            </div>
+            <span className="g-text" style={{fontSize:19,fontWeight:700,letterSpacing:'-.025em'}}>SubTranslate</span>
+            <div className="fs" style={{marginLeft:4,opacity:.28}}>
+              {Array.from({length:9}).map((_,i)=><div key={i} className="fs-h"/>)}
+            </div>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <div style={{background:`${ok?'rgba(0,200,176,.08)':'rgba(240,114,126,.08)'}`,border:`1px solid ${ok?'rgba(0,200,176,.2)':'rgba(240,114,126,.22)'}`,borderRadius:999,padding:'5px 14px',fontSize:11.5,color:col,display:'flex',alignItems:'center',gap:7,fontWeight:500}}>
+              <span className={ok?'pulse-dot':''} style={{width:6,height:6,borderRadius:'50%',background:col,display:'inline-block',boxShadow:ok?`0 0 5px ${col}`:'none',flexShrink:0}}/>
+              {label}
+            </div>
+            <button className="btn-s" onClick={onLayout} title={vertical?'Switch to wide layout':'Switch to vertical (9:16) layout'}>
+              {vertical?<><ColumnsIco size={13}/><span>Wide</span></>:<><RowsIco size={13}/><span>Vertical</span></>}
+            </button>
+            <button className="btn-s" onClick={onToggle}>
+              {theme==='dark'?<><SunIco size={13}/><span>Light</span></>:<><MoonIco size={13}/><span>Dark</span></>}
+            </button>
+          </div>
+        </header>
+      );
+    }
+
+    // ── FileDropZone ───────────────────────────────────────
+    function FileDropZone({fileInfo,onLoad,onPick}) {
+      const [over,setOver]=useState(false);
+      const ref=useRef(null);
+      const handle=useCallback((file)=>{
+        if(!file) return;
+        if(!file.name.toLowerCase().endsWith('.srt')){alert('Please drop a .srt subtitle file.');return;}
+        const rd=new FileReader();
+        rd.onload=e=>{
+          const raw=e.target.result;
+          const blocks=parseSRT(raw), last=blocks[blocks.length-1];
+          onLoad({name:file.name,size:fmtBytes(file.size),blocks:blocks.length,duration:last?fmtDur(last.end):'00:00:00',cues:blocks.slice(0,3),raw});
+        };
+        rd.readAsText(file);
+      },[onLoad]);
+      const cues=React.useMemo(()=>fileInfo&&fileInfo.raw?parseSRT(fileInfo.raw):[],[fileInfo]);
+      if (fileInfo) return (
+        <div className="glass" style={{padding:20}}>
+          <input ref={ref} type="file" accept=".srt" style={{display:'none'}} onChange={e=>handle(e.target.files[0])}/>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+            <div style={{display:'flex',alignItems:'center',gap:12}}>
+              <div style={{background:'rgba(0,200,176,.1)',border:'1px solid rgba(0,200,176,.2)',borderRadius:10,padding:10,display:'flex'}}>
+                <FileIco size={20} color="var(--tc)"/>
+              </div>
+              <div>
+                <div style={{fontWeight:600,fontSize:13.5,marginBottom:3}}>{fileInfo.name}</div>
+                <div style={{fontSize:12,color:'var(--tx2)',display:'flex',gap:10}}>
+                  <span>{fileInfo.size}</span><span style={{color:'var(--tx3)'}}>·</span>
+                  <span style={{color:'var(--tc)',fontWeight:500}}>{fileInfo.blocks.toLocaleString()} blocks</span>
+                  <span style={{color:'var(--tx3)'}}>·</span><span>{fileInfo.duration}</span>
+                  {!fileInfo.raw&&<><span style={{color:'var(--tx3)'}}>·</span><span style={{color:'#E0A458'}}>demo (load a file to translate)</span></>}
+                </div>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button className="btn-s" onClick={()=> onPick ? onPick() : ref.current?.click()} title="Load another file"><UploadIco size={13}/><span>Replace</span></button>
+              <button className="btn-s" style={{padding:'6px 9px'}} onClick={()=>onLoad(null)}><XmarkIco size={13}/></button>
+            </div>
+          </div>
+          <div className="slabel" style={{marginBottom:10}}>Original · {cues.length.toLocaleString()} cues</div>
+          <SubtitleList cues={cues} empty="Could not read cues from this file"/>
+        </div>
+      );
+      return (
+        <div className={`dz${over?' over':''}`} style={{padding:'44px 28px',textAlign:'center'}}
+          onDragOver={e=>{e.preventDefault();setOver(true);}} onDragLeave={()=>setOver(false)}
+          onDrop={e=>{e.preventDefault();setOver(false);handle(e.dataTransfer.files[0]);}}
+          onClick={()=> onPick ? onPick() : ref.current?.click()}>
+          <input ref={ref} type="file" accept=".srt" style={{display:'none'}} onChange={e=>handle(e.target.files[0])}/>
+          <div className="fs" style={{justifyContent:'center',marginBottom:18,opacity:over?.65:.28}}>
+            {Array.from({length:9}).map((_,i)=><div key={i} style={{width:12,height:16,background:over?'rgba(0,200,176,.25)':'var(--sur-hi)',borderRadius:3,transition:'background .28s'}}/>)}
+          </div>
+          <div style={{width:54,height:54,background:over?'rgba(0,200,176,.1)':'var(--sur)',border:`1px solid ${over?'rgba(0,200,176,.4)':'var(--bdr-hi)'}`,borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px',transition:'all .28s'}}>
+            <UploadIco size={22} color={over?'var(--tc)':'var(--tx2)'}/>
+          </div>
+          <div style={{fontSize:15,fontWeight:600,marginBottom:5}}>{over?'Drop to load':'Drop a .srt file here'}</div>
+          <div style={{fontSize:13,color:'var(--tx2)'}}>or <span style={{color:'var(--tc)',textDecoration:'underline',textDecorationColor:'rgba(0,200,176,.4)'}}>browse</span></div>
+          <div style={{marginTop:16,fontSize:11.5,color:'var(--tx3)',letterSpacing:'.01em'}}>Indexes &amp; timestamps preserved — only text is translated</div>
+        </div>
+      );
+    }
+
+    // ── ContextSection ─────────────────────────────────────
+    function ContextSection({value,onChange}) {
+      const [copied,setCopied]=useState(false);
+      const [open,setOpen]=useState(true);
+      const copy=()=>{navigator.clipboard.writeText(CTX_PROMPT).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2200);});};
+      return (
+        <div className="glass" style={{padding:20}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:open?14:0}}>
+            <button onClick={()=>setOpen(o=>!o)} title={open?'Collapse (hide for screen-sharing)':'Expand'}
+              style={{display:'flex',alignItems:'center',gap:8,background:'none',border:'none',color:'var(--tx)',cursor:'pointer',fontFamily:'inherit',padding:0}}>
+              {open?<ChevDownIco size={14} color="var(--tx3)"/>:<ChevRightIco size={14} color="var(--tx3)"/>}
+              <BookIco size={15} color="var(--tx2)"/>
+              <span style={{fontWeight:600,fontSize:14}}>Background & Context</span>
+              {!open&&<span style={{fontSize:11.5,color:'var(--tx3)',fontWeight:400}}>{value.length?`(${value.length.toLocaleString()} chars, hidden)`:'(empty)'}</span>}
+            </button>
+            <div style={{display:'flex',gap:8}}>
+              {open&&<button className="btn-s" onClick={copy}>
+                {copied?<><CheckIco size={12} color="var(--tc)"/><span style={{color:'var(--tc)'}}>Copied!</span></>:<><StarsIco size={12}/><span>Copy context prompt</span></>}
+              </button>}
+            </div>
+          </div>
+          {open&&<>
+            <textarea className="sf-in sf-ta" dir="auto" value={value} onChange={e=>onChange(e.target.value)}
+              placeholder={"Paste your episode/show brief here…\n\nTip: click 'Copy context prompt' → paste into Gemini or ChatGPT → paste the result back here."}/>
+            <div style={{display:'flex',justifyContent:'space-between',marginTop:8,fontSize:11.5,color:'var(--tx3)'}}>
+              <span>Supports RTL text (Hebrew, Arabic…)</span>
+              <span style={{color:value.length>150?'var(--tc)':'var(--tx3)',fontFamily:'"JetBrains Mono",monospace',fontSize:11}}>{value.length.toLocaleString()} chars</span>
+            </div>
+          </>}
+        </div>
+      );
+    }
+
+    // ── ParametersPanel ────────────────────────────────────
+    function ParametersPanel(p) {
+      const {models,targetLang,setTargetLang,sourceLang,setSourceLang,model,setModel,customModel,setCustomModel,
+        host,setHost,onRecheck,
+        glossaryFile,setGlossaryFile,onAttachGlossary,onScanNames,batchSize,setBatchSize,ctxLines,setCtxLines,
+        maxGroup,setMaxGroup,sentenceMode,setSentenceMode,rangeMode,setRangeMode,rangeN,setRangeN,rangeA,setRangeA,rangeB,setRangeB}=p;
+      const [advOpen,setAdvOpen]=useState(false);
+      const lbl={fontSize:11.5,color:'var(--tx2)',marginBottom:5,display:'block'};
+      const sec={display:'flex',alignItems:'center',gap:5};
+      return (
+        <div className="glass" style={{padding:20}}>
+          <div style={{marginBottom:18}}>
+            <div className="slabel" style={{marginBottom:10,...sec}}><GlobeIco size={11}/>Languages</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+              <div><label style={lbl}>Target *</label><input className="sf-in" value={targetLang} onChange={e=>setTargetLang(e.target.value)} placeholder="e.g. Hebrew"/></div>
+              <div><label style={lbl}>Source</label><input className="sf-in" value={sourceLang} onChange={e=>setSourceLang(e.target.value)} placeholder="e.g. English"/></div>
+            </div>
+          </div>
+          <div className="divider"/>
+          <div style={{marginBottom:18}}>
+            <div className="slabel" style={{marginBottom:10,...sec}}><CpuIco size={11}/>Model</div>
+            <select className="sf-in sf-sel" value={model} onChange={e=>setModel(e.target.value)}>
+              {models.map(m=><option key={m.value} value={m.value}>{m.label}</option>)}
+            </select>
+            {model==='custom'&&<input className="sf-in" style={{marginTop:8}} value={customModel} onChange={e=>setCustomModel(e.target.value)} placeholder="Enter model name, e.g. mistral:7b"/>}
+            <label style={{...lbl,margin:'12px 0 5px'}}>Ollama host</label>
+            <div style={{display:'flex',gap:8}}>
+              <input className="sf-in" value={host} onChange={e=>setHost(e.target.value)} placeholder="http://localhost:11434"/>
+              <button className="btn-s" style={{whiteSpace:'nowrap'}} onClick={()=>onRecheck&&onRecheck(host)} title="Re-check Ollama and refresh models">Recheck</button>
+            </div>
+          </div>
+          <div className="divider"/>
+          <div style={{marginBottom:18}}>
+            <div className="slabel" style={{marginBottom:10,...sec}}><ListIco size={11}/>Glossary</div>
+            {glossaryFile?(
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 13px',background:'rgba(0,200,176,.06)',border:'1px solid rgba(0,200,176,.18)',borderRadius:9}}>
+                <div style={{display:'flex',alignItems:'center',gap:8}}><FileIco size={13} color="var(--tc)"/><span style={{fontSize:12.5,color:'var(--tc)'}}>{glossaryFile.name}</span></div>
+                <button className="btn-s" style={{padding:'3px 7px'}} onClick={()=>setGlossaryFile(null)}><XmarkIco size={11}/></button>
+              </div>
+            ):(
+              <div style={{display:'flex',gap:8}}>
+                <button className="btn-s" style={{flex:1,justifyContent:'center',padding:'10px 0',borderStyle:'dashed'}} onClick={onAttachGlossary}>
+                  <ClipIco size={12}/><span>Attach glossary</span>
+                </button>
+                <button className="btn-s" style={{flex:1,justifyContent:'center',padding:'10px 0'}} onClick={onScanNames}>
+                  <ScanIco size={12}/><span>Scan for names</span>
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="divider"/>
+          <button className="btn-s" style={{width:'100%',justifyContent:'space-between',padding:'10px 13px'}} onClick={()=>setAdvOpen(o=>!o)}>
+            <span style={{display:'flex',alignItems:'center',gap:6}}><SlidersIco size={12}/>Advanced settings</span>
+            {advOpen?<ChevUpIco size={13}/>:<ChevDownIco size={13}/>}
+          </button>
+          {advOpen&&(
+            <div style={{marginTop:14,paddingTop:14,borderTop:'1px solid var(--bdr)',display:'flex',flexDirection:'column',gap:14}} className="slide-up">
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
+                {[{label:'Batch size',v:batchSize,s:setBatchSize},{label:'Context lines',v:ctxLines,s:setCtxLines},{label:'Max group',v:maxGroup,s:setMaxGroup}].map(({label,v,s})=>(
+                  <div key={label}><label style={{fontSize:11,color:'var(--tx3)',marginBottom:5,display:'block'}}>{label}</label><input type="number" className="sf-in sf-num" value={v} onChange={e=>s(Math.max(0,Number(e.target.value)))} min={0}/></div>
+                ))}
+              </div>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                <div><div style={{fontSize:13,fontWeight:500}}>Sentence mode</div><div style={{fontSize:11.5,color:'var(--tx3)'}}>Merge fragments into full sentences</div></div>
+                <button className={`tog${sentenceMode?' on':''}`} onClick={()=>setSentenceMode(v=>!v)}/>
+              </div>
+              <div>
+                <label style={{...lbl,marginBottom:8}}>Translation range</label>
+                {[{v:'all',l:'Translate all blocks'},{v:'first',l:'First N blocks'},{v:'range',l:'Block range A – B'}].map(opt=>(
+                  <label key={opt.v} style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,marginBottom:6}}>
+                    <input type="radio" className="sf-radio" name="sfrange" value={opt.v} checked={rangeMode===opt.v} onChange={()=>setRangeMode(opt.v)}/>
+                    {opt.l}
+                    {opt.v==='first'&&rangeMode==='first'&&<input type="number" className="sf-in sf-num" style={{marginLeft:4}} value={rangeN} onChange={e=>setRangeN(Math.max(1,Number(e.target.value)))} min={1}/>}
+                  </label>
+                ))}
+                {rangeMode==='range'&&(
+                  <div style={{display:'flex',alignItems:'center',gap:8,paddingLeft:22,marginTop:4}}>
+                    <input type="number" className="sf-in sf-num" value={rangeA} onChange={e=>setRangeA(Math.max(1,Number(e.target.value)))} min={1} placeholder="From"/>
+                    <span style={{color:'var(--tx3)',fontSize:12}}>to</span>
+                    <input type="number" className="sf-in sf-num" value={rangeB} onChange={e=>setRangeB(Math.max(1,Number(e.target.value)))} min={1} placeholder="To"/>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── SetupStrip (honest "what will be sent") ────────────
+    function Chip({on,label}) {
+      return (
+        <span style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 11px',borderRadius:999,fontSize:11.5,fontWeight:500,
+          background:on?'rgba(0,200,176,.08)':'var(--sur)',border:`1px solid ${on?'rgba(0,200,176,.22)':'var(--bdr)'}`,color:on?'var(--tc)':'var(--tx3)'}}>
+          <span style={{width:5,height:5,borderRadius:'50%',background:on?'var(--tc)':'var(--tx3)',display:'inline-block'}}/>{label}
+        </span>
+      );
+    }
+    function SetupStrip({model,targetLang,glossaryTerms,ctxChars,sentenceMode,rangeLabel,onPreview,canPreview}) {
+      return (
+        <div className="glass" style={{padding:18}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+            <div style={{display:'flex',alignItems:'center',gap:8}}><EyeIco size={14} color="var(--tx2)"/><span style={{fontWeight:600,fontSize:14}}>What will be sent to the model</span></div>
+            <button className="btn-s" onClick={onPreview} disabled={!canPreview} style={!canPreview?{opacity:.5,cursor:'not-allowed'}:{}}><EyeIco size={12}/><span>Preview prompt</span></button>
+          </div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+            <Chip on={!!model} label={`Model: ${model||'—'}`}/>
+            <Chip on={!!targetLang} label={`→ ${targetLang||'—'}`}/>
+            <Chip on={glossaryTerms>0} label={glossaryTerms>0?`Glossary: ${glossaryTerms} terms`:'Glossary: none'}/>
+            <Chip on={ctxChars>0} label={ctxChars>0?`Context: ${ctxChars.toLocaleString()} chars`:'Context: none'}/>
+            <Chip on={sentenceMode} label={sentenceMode?'Sentence mode':'Block mode'}/>
+            <Chip on={true} label={rangeLabel}/>
+          </div>
+        </div>
+      );
+    }
+
+    // ── ProgressView ───────────────────────────────────────
+    function ProgressView({progress,count,total,lines,complete,onDownload,onCancel,onReset}) {
+      const last=lines[lines.length-1];
+      return (
+        <div className="glass" style={{padding:20}}>
+          {!complete?(
+            <>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+                <SpinIco size={16} color="var(--tc)" className="spin"/>
+                <span style={{fontWeight:600,fontSize:14}}>Translating…</span>
+                <span style={{marginLeft:'auto',fontFamily:'"JetBrains Mono",monospace',fontSize:12.5,color:'var(--tc)'}}>{Math.floor(progress)}%</span>
+                <button className="btn-s" style={{padding:'4px 9px'}} onClick={onCancel}><StopIco size={11}/>Stop</button>
+              </div>
+              <div className="pbar" style={{marginBottom:9}}><div className="pbar-f" style={{width:`${progress}%`}}/></div>
+              <div style={{fontSize:12,color:'var(--tx2)',marginBottom:16}}>
+                Translated <span style={{color:'var(--tc)',fontWeight:600}}>{count.toLocaleString()}</span> / {total.toLocaleString()} blocks
+              </div>
+              <div style={{marginBottom:12}}>
+                <div className="slabel" style={{marginBottom:8}}>Live preview</div>
+                <div className="hf">
+                  <div style={{position:'absolute',inset:0,background:'linear-gradient(180deg,#0D1528 0%,#04070E 100%)'}}/>
+                  <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 90% 70% at 50% 50%,transparent 30%,rgba(0,0,0,.65) 100%)'}}/>
+                  <span style={{position:'absolute',top:10,left:12,fontFamily:'"JetBrains Mono",monospace',fontSize:9,color:'rgba(255,255,255,.3)',zIndex:3,letterSpacing:'.05em'}}>{last?(last.start||'').replace(',',':'):'00:00:00:000'}</span>
+                  <span style={{position:'absolute',top:10,right:12,fontFamily:'"JetBrains Mono",monospace',fontSize:9,color:'rgba(255,255,255,.22)',zIndex:3}}>SubTranslate Preview</span>
+                  {last&&<div className="hf-sub stream-in" key={last.text}>{last.text}</div>}
+                </div>
+              </div>
+              <div style={{display:'flex',flexDirection:'column',gap:5}}>
+                {lines.slice(-3).map((ln,i,arr)=>{
+                  const isLast=i===arr.length-1;
+                  return (
+                    <div key={(ln.start||'')+i} className={isLast?'stream-in':''} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 10px',background:'var(--sur)',border:'1px solid var(--bdr)',borderRadius:8,opacity:isLast?1:0.38+i*0.28}}>
+                      <TCChip start={ln.start} end={ln.end}/>
+                      <span style={{fontSize:13,direction:'rtl',flex:1,textAlign:'right',color:'var(--tx)'}}>{ln.text}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ):(
+            <div className="slide-up">
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+                <div style={{width:32,height:32,borderRadius:'50%',background:'rgba(0,200,176,.12)',border:'1px solid rgba(0,200,176,.3)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <CheckIco size={16} color="var(--tc)"/>
+                </div>
+                <div><div style={{fontWeight:600,fontSize:14}}>Translation complete</div><div style={{fontSize:12,color:'var(--tx2)'}}>{total.toLocaleString()} blocks translated</div></div>
+              </div>
+              <div className="hf" style={{marginBottom:16}}>
+                <div style={{position:'absolute',inset:0,background:'linear-gradient(180deg,#0D1528 0%,#04070E 100%)'}}/>
+                <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 90% 70% at 50% 50%,transparent 30%,rgba(0,0,0,.65) 100%)'}}/>
+                <div className="hf-sub">{last?.text||'הושלם!'}</div>
+              </div>
+              <button className="btn-p" style={{width:'100%'}} onClick={onDownload}><DlIco size={16}/>Save translated .srt</button>
+              <button className="btn-s" style={{width:'100%',justifyContent:'center',marginTop:10,padding:'11px 0'}} onClick={onReset}><PlayIco size={13}/><span>New translation</span></button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── SubtitleList (scrollable) ──────────────────────────
+    const SubtitleList = React.memo(function SubtitleList({cues,rtl,empty,innerRef,onScroll}) {
+      if(!cues||!cues.length) return <div style={{padding:'34px 0',textAlign:'center',color:'var(--tx3)',fontSize:12.5}}>{empty||'No subtitles'}</div>;
+      return (
+        <div className="sublist" ref={innerRef} onScroll={onScroll}>
+          {cues.map((c,i)=>(
+            <div className="cue" key={i}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}>
+                <span style={{fontFamily:'"JetBrains Mono",monospace',fontSize:10,color:'var(--tx3)',minWidth:34}}>#{c.index}</span>
+                <TCChip start={c.start} end={c.end}/>
+              </div>
+              <p style={{fontSize:13,color:rtl?'var(--tx)':'var(--tx2)',lineHeight:1.5,paddingLeft:30,direction:rtl?'rtl':'ltr',textAlign:rtl?'right':'left',whiteSpace:'pre-wrap'}}>{c.text}</p>
+            </div>
+          ))}
+        </div>
+      );
+    });
+
+    // ── CompareView (original ↔ translated, scroll-synced) ──
+    function CompareView({original,translated,translating}) {
+      const leftRef=useRef(null), rightRef=useRef(null), lock=useRef(false);
+      const mirror=useCallback((src,dst)=>{
+        if(lock.current||!src.current||!dst.current) return;
+        lock.current=true;
+        const s=src.current, d=dst.current;
+        const denom=(s.scrollHeight-s.clientHeight)||1;
+        d.scrollTop=(s.scrollTop/denom)*(d.scrollHeight-d.clientHeight);
+        requestAnimationFrame(()=>{lock.current=false;});
+      },[]);
+      const onLeft=useCallback(()=>mirror(leftRef,rightRef),[mirror]);
+      const onRight=useCallback(()=>mirror(rightRef,leftRef),[mirror]);
+      return (
+        <div className="fullw">
+          <div className="glass" style={{padding:20}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
+              <ListIco size={14} color="var(--tx2)"/><span style={{fontWeight:600,fontSize:14}}>Subtitles — original & translation</span>
+              <span style={{marginLeft:'auto',fontSize:11,color:'var(--tx3)'}}>scroll synced</span>
+            </div>
+            <div className="cmpgrid">
+              <div>
+                <div className="slabel" style={{marginBottom:8}}>Original · {original.length.toLocaleString()} cues</div>
+                <SubtitleList cues={original} innerRef={leftRef} onScroll={onLeft} empty="Load a .srt file to see the original subtitles"/>
+              </div>
+              <div>
+                <div className="slabel" style={{marginBottom:8}}>Translated · {translated.length.toLocaleString()} cues</div>
+                <SubtitleList cues={translated} rtl innerRef={rightRef} onScroll={onRight} empty={translating?'Translating…':'Run a translation to see the output here'}/>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── OutputCard (destination + name) ────────────────────
+    function OutputCard({name,setName,dir,onPickDir,onClearDir}) {
+      return (
+        <div className="glass" style={{padding:20}}>
+          <div className="slabel" style={{marginBottom:12,display:'flex',alignItems:'center',gap:5}}><DlIco size={11}/>Output file</div>
+          <label style={{fontSize:11.5,color:'var(--tx2)',marginBottom:5,display:'block'}}>File name</label>
+          <input className="sf-in" value={name} onChange={e=>setName(e.target.value)} placeholder="output.he.srt"/>
+          <label style={{fontSize:11.5,color:'var(--tx2)',margin:'13px 0 6px',display:'block'}}>Destination folder</label>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <button className="btn-s" onClick={onPickDir}><FolderIco size={12}/><span>Choose…</span></button>
+            {dir&&<button className="btn-s" style={{padding:'6px 8px'}} onClick={onClearDir} title="Use input folder"><XmarkIco size={11}/></button>}
+            <span style={{fontSize:11,color:'var(--tx3)',fontFamily:'"JetBrains Mono",monospace',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{dir||'same folder as input'}</span>
+          </div>
+          <div style={{marginTop:11,fontSize:11,color:'var(--tx3)',fontFamily:'"JetBrains Mono",monospace',wordBreak:'break-all'}}>→ {(dir||'<input folder>')}\{name||'output.srt'}</div>
+        </div>
+      );
+    }
+
+    // ── App ────────────────────────────────────────────────
+    function App() {
+      const [theme,setTheme]=useState('dark');
+      const [vertical,setVertical]=useState(false);
+      const [fileInfo,setFileInfo]=useState(null);
+      const [summary,setSummary]=useState('');
+      const [targetLang,setTargetLang]=useState('Hebrew');
+      const [sourceLang,setSourceLang]=useState('English');
+      const [model,setModel]=useState('gemma3:12b');
+      const [customModel,setCustomModel]=useState('');
+      const [models,setModels]=useState(DEFAULT_MODELS);
+      const [glossaryFile,setGlossaryFile]=useState(null);
+      const [batchSize,setBatchSize]=useState(20);
+      const [ctxLines,setCtxLines]=useState(3);
+      const [maxGroup,setMaxGroup]=useState(4);
+      const [sentenceMode,setSentenceMode]=useState(true);
+      const [rangeMode,setRangeMode]=useState('all');
+      const [rangeN,setRangeN]=useState(30);
+      const [rangeA,setRangeA]=useState(1);
+      const [rangeB,setRangeB]=useState(100);
+      const [toast,setToast]=useState(false);
+      const [toastMsg,setToastMsg]=useState('');
+      const [translating,setTranslating]=useState(false);
+      const [progress,setProgress]=useState(0);
+      const [progBlocks,setProgBlocks]=useState(0);
+      const [totalBlocks,setTotalBlocks]=useState(0);
+      const [streamLines,setStreamLines]=useState([]);
+      const [complete,setComplete]=useState(false);
+      const [outputText,setOutputText]=useState('');
+      const [ollama,setOllama]=useState({ok:null});
+      const [host,setHost]=useState('http://localhost:11434');
+      const [previewText,setPreviewText]=useState(null);
+      const [outName,setOutNameRaw]=useState('');
+      const [outDir,setOutDir]=useState(null);
+      const outDirty=useRef(false);
+      const glRef=useRef(null);
+
+      const setOutName=v=>{outDirty.current=true;setOutNameRaw(v);};
+      // keep a sensible default output name until the user edits it
+      useEffect(()=>{
+        if(outDirty.current) return;
+        const base=(fileInfo?.name||'subtitles.srt').replace(/\.[^.]+$/,'');
+        setOutNameRaw(`${base}.${(targetLang||'out').toLowerCase()}.srt`);
+      },[fileInfo,targetLang]);
+
+      const originalCues=React.useMemo(()=>fileInfo?.raw?parseSRT(fileInfo.raw):[],[fileInfo]);
+      const translatedCues=React.useMemo(()=>
+        outputText?parseSRT(outputText):streamLines.map((l,i)=>({index:i+1,start:l.start,end:l.end,text:l.text})),
+        [outputText,streamLines]);
+
+      useEffect(()=>{document.documentElement.dataset.theme=theme;},[theme]);
+
+      // Query Ollama for installed models; pick a sensible default if the saved one is gone.
+      const refreshModels=useCallback((h)=>{
+        if(!SF){ setOllama({ok:false,count:0}); return; }
+        setOllama(o=>({...(o||{}),checking:true}));
+        SF.listModels(h).then(r=>{
+          const count=r.models?r.models.length:0;
+          setOllama({ok:r.ok,error:r.error,count});
+          if(r.ok&&count){
+            const opts=r.models.map(m=>({value:m.name,label:m.name+((/gemma3|aya-expanse/.test(m.name))?'  ★':'')}));
+            opts.push({value:'custom',label:'Custom…'});
+            setModels(opts);
+            const names=r.models.map(m=>m.name);
+            setModel(cur=>names.includes(cur)?cur:(names.find(n=>/gemma3/.test(n))||names[0]));
+          } else if(r.ok){
+            setModels([{value:'custom',label:'Custom…'}]);
+          }
+        });
+      },[]);
+
+      // load saved settings, then query Ollama
+      useEffect(()=>{
+        if(!SF){ setOllama({ok:false,count:0}); return; }
+        (async()=>{
+          let h='http://localhost:11434';
+          if(SF.loadSettings){
+            const s=await SF.loadSettings()||{};
+            if(s.host){ h=s.host; setHost(s.host); }
+            if(s.targetLang) setTargetLang(s.targetLang);
+            if(s.sourceLang!=null) setSourceLang(s.sourceLang);
+            if(s.model) setModel(s.model);
+            if(s.batchSize) setBatchSize(s.batchSize);
+            if(s.ctxLines!=null) setCtxLines(s.ctxLines);
+            if(s.maxGroup) setMaxGroup(s.maxGroup);
+            if(s.sentenceMode!=null) setSentenceMode(s.sentenceMode);
+          }
+          refreshModels(h);
+        })();
+      },[]);
+
+      // subscribe to live progress
+      useEffect(()=>{
+        if(!SF) return;
+        const off=SF.onProgress(p=>{
+          setTotalBlocks(p.total);
+          setProgBlocks(p.done);
+          setProgress(Math.round(p.done/p.total*100));
+          if(p.cue&&p.cue.text) setStreamLines(prev=>[...prev.slice(-40),{start:p.cue.start,end:p.cue.end,text:p.cue.text}]);
+        });
+        return off;
+      },[]);
+
+      const showToast=msg=>{setToastMsg(msg);setToast(true);setTimeout(()=>setToast(false),2400);};
+
+      const optsForEngine=()=>({
+        srtText:fileInfo?.raw||'', tgtLang:targetLang, srcLang:sourceLang,
+        model: model==='custom'?(customModel||'').trim():model, host,
+        glossaryText:glossaryFile?.content||'', summary,
+        batchSize, ctxLines, maxGroupBlocks:maxGroup, sentenceMode,
+        rangeMode, rangeN, rangeA, rangeB,
+      });
+
+      const pickSrt=async()=>{
+        if(!SF){ return; }
+        const f=await SF.pickSrt();
+        if(!f) return;
+        const blocks=parseSRT(f.content), last=blocks[blocks.length-1];
+        setFileInfo({name:f.name,path:f.path,size:`${(f.content.length/1024).toFixed(1)} KB`,blocks:blocks.length,duration:last?fmtDur(last.end):'00:00:00',cues:blocks.slice(0,3),raw:f.content});
+        if(f.path) setOutDir(f.path.replace(/[\\/][^\\/]+$/,''));  // default dest = input's folder
+        resetOutput();
+      };
+
+      const attachGlossary=async()=>{
+        if(SF){ const f=await SF.pickText({title:'Open glossary',extensions:['txt','csv']}); if(f) setGlossaryFile({name:f.name,content:f.content}); }
+        else glRef.current?.click();
+      };
+      const scanNames=async()=>{
+        if(!SF||!fileInfo?.raw){ showToast('Load a real .srt file first'); return; }
+        const r=await SF.extractNames({srtText:fileInfo.raw,sourceName:fileInfo.name});
+        const base=(fileInfo.name||'subtitles.srt').replace(/\.[^.]+$/,'');
+        const s=await SF.saveText({defaultName:`${base}.glossary.txt`,text:r.template});
+        if(s.saved){ showToast(`Saved glossary template — ${r.rows.length} terms`); setGlossaryFile({name:s.path.split(/[\\/]/).pop(),content:r.template}); }
+      };
+      const doPreview=async()=>{
+        if(SF&&fileInfo?.raw){ const p=await SF.previewPrompt(optsForEngine()); setPreviewText(p); }
+        else setPreviewText('Load a real .srt file to preview the exact prompt.');
+      };
+
+      const startTranslation=async()=>{
+        if(!SF){ showToast('Run inside the SubTranslate desktop app to translate'); return; }
+        if(ollama.ok===false){ showToast('Ollama is not reachable — check it is running'); return; }
+        if(ollama.ok&&!ollama.count){ showToast('No models installed — run e.g. `ollama pull llama3.1:8b`'); return; }
+        if(!fileInfo?.raw){ showToast('Load a real .srt file to translate'); return; }
+        if(model==='custom'&&!customModel.trim()){ showToast('Enter a custom model name first'); return; }
+        setTranslating(true);setProgress(0);setProgBlocks(0);setTotalBlocks(fileInfo.blocks||0);setStreamLines([]);setComplete(false);setOutputText('');
+        const res=await SF.translate(optsForEngine());
+        setTranslating(false);
+        if(res.ok){ setOutputText(res.outputText); setComplete(true); setProgress(100);
+          if(res.warnings>0) showToast(`Done — ${res.warnings} block(s) kept original due to model errors`);
+          SF.saveSettings&&SF.saveSettings({host,model,targetLang,sourceLang,batchSize,ctxLines,maxGroup,sentenceMode}); }
+        else { setComplete(false); showToast(res.error||'Translation failed'); }
+      };
+      const cancel=async()=>{ if(SF) await SF.cancelTranslate(); setTranslating(false); };
+      const resetOutput=()=>{ setComplete(false); setTranslating(false); setOutputText(''); setStreamLines([]); setProgress(0); setProgBlocks(0); };
+      const pickDir=async()=>{ if(SF){ const d=await SF.pickFolder(); if(d) setOutDir(d); } };
+      const download=async()=>{
+        if(!outputText){ showToast('Nothing to save'); return; }
+        if(!SF){ showToast('Run in the desktop app to save'); return; }
+        const name=outName||`${(fileInfo?.name||'subtitles').replace(/\.[^.]+$/,'')}.${(targetLang||'out').toLowerCase()}.srt`;
+        let r;
+        if(outDir){
+          r=await SF.writeFile({dir:outDir,name,text:outputText});
+          if(r&&r.exists){
+            if(!window.confirm(`"${name}" already exists in this folder.\nOverwrite it?`)) { showToast('Save cancelled'); return; }
+            r=await SF.writeFile({dir:outDir,name,text:outputText,overwrite:true});
+          }
+        } else {
+          r=await SF.saveText({defaultName:name,text:outputText});
+        }
+        if(r&&r.saved) showToast('Saved '+r.path.split(/[\\/]/).pop());
+        else if(r&&r.error) showToast('Save failed: '+r.error);
+      };
+
+      const glossaryTerms=React.useMemo(()=>{
+        const t=glossaryFile&&glossaryFile.content; if(!t) return 0;
+        let n=0;
+        for(let line of t.split(/\r?\n/)){ line=line.trim(); if(!line||line.startsWith('#')||!line.includes('=')) continue;
+          const i=line.indexOf('='); const src=line.slice(0,i).trim(); const tgt=line.slice(i+1).split('#')[0].trim(); if(src&&tgt) n++; }
+        return n;
+      },[glossaryFile]);
+      const rangeLabel=rangeMode==='all'?'All blocks':rangeMode==='first'?`First ${rangeN}`:`Range ${rangeA}–${rangeB}`;
+      const pp={models,targetLang,setTargetLang,sourceLang,setSourceLang,model,setModel,customModel,setCustomModel,host,setHost,onRecheck:refreshModels,glossaryFile,setGlossaryFile,onAttachGlossary:attachGlossary,onScanNames:scanNames,batchSize,setBatchSize,ctxLines,setCtxLines,maxGroup,setMaxGroup,sentenceMode,setSentenceMode,rangeMode,setRangeMode,rangeN,setRangeN,rangeA,setRangeA,rangeB,setRangeB};
+
+      return (
+        <div className={'app'+(vertical?' vertical':'')}>
+          <TopBar theme={theme} onToggle={()=>setTheme(t=>t==='dark'?'light':'dark')} ollama={ollama} vertical={vertical} onLayout={()=>setVertical(v=>{const nv=!v; if(SF&&SF.setWindowMode) SF.setWindowMode(nv?'vertical':'wide'); return nv;})}/>
+          {SF&&(ollama.ok===false||(ollama.ok&&!ollama.count))&&(
+            <div style={{maxWidth:1460,margin:'14px auto 0',padding:'0 28px'}}>
+              <div className="glass" style={{padding:'13px 16px',display:'flex',alignItems:'center',gap:12,border:'1px solid rgba(240,114,126,.3)',background:'rgba(240,114,126,.07)'}}>
+                <span style={{fontSize:13,color:'var(--tx)',flex:1}}>
+                  {ollama.ok===false
+                    ? <>Can't reach Ollama at <b>{host}</b>. Make sure it's installed and running — see <span style={{color:'var(--tc)'}}>ollama.com</span>.</>
+                    : <>Ollama is running but has no models. Pull one, e.g. <code style={{fontFamily:'"JetBrains Mono",monospace',color:'var(--tc)'}}>ollama pull llama3.1:8b</code>.</>}
+                </span>
+                <button className="btn-s" onClick={()=>refreshModels(host)}>{ollama.checking?'Checking…':'Retry'}</button>
+              </div>
+            </div>
+          )}
+          <div className="workspace">
+            <div style={{display:'flex',flexDirection:'column',gap:20}}>
+              <FileDropZone fileInfo={fileInfo} onLoad={(fi)=>{setFileInfo(fi);resetOutput();}} onPick={SF?pickSrt:null}/>
+              <ContextSection value={summary} onChange={setSummary}/>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:20}}>
+              <ParametersPanel {...pp}/>
+              <input ref={glRef} type="file" accept=".txt,.csv" style={{display:'none'}} onChange={e=>{const f=e.target.files[0]; if(f){const rd=new FileReader();rd.onload=ev=>setGlossaryFile({name:f.name,content:ev.target.result});rd.readAsText(f);}}}/>
+              <OutputCard name={outName} setName={setOutName} dir={outDir} onPickDir={pickDir} onClearDir={()=>setOutDir(null)}/>
+              <SetupStrip model={model==='custom'?(customModel||'(custom)'):model} targetLang={targetLang} glossaryTerms={glossaryTerms} ctxChars={summary.length} sentenceMode={sentenceMode} rangeLabel={rangeLabel} onPreview={doPreview} canPreview={!!(SF&&fileInfo&&fileInfo.raw)}/>
+              {translating||complete?(
+                <ProgressView progress={progress} count={progBlocks} total={totalBlocks||fileInfo?.blocks||0} lines={streamLines} complete={complete} onDownload={download} onCancel={cancel} onReset={resetOutput}/>
+              ):(
+                <button className="btn-p" style={{width:'100%'}} onClick={startTranslation} disabled={!fileInfo||!!(SF&&(ollama.ok===false||(ollama.ok&&!ollama.count)))}>
+                  <PlayIco size={16}/>Translate Subtitles
+                </button>
+              )}
+            </div>
+          </div>
+          <CompareView original={originalCues} translated={translatedCues} translating={translating}/>
+          <Toast visible={toast} msg={toastMsg}/>
+          <PromptModal text={previewText} onClose={()=>setPreviewText(null)}/>
+        </div>
+      );
+    }
+
+    // prevent the window from navigating when a file is dropped outside the zone
+    window.addEventListener('dragover',e=>e.preventDefault());
+    window.addEventListener('drop',e=>e.preventDefault());
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>
