@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SubTranslate — AI Subtitle Translation</title>
+  <title>SubLingo — AI Subtitle Translation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -93,7 +93,7 @@
   <script src="vendor/babel.min.js"></script>
   <script type="text/babel">
     const { useState, useEffect, useRef, useCallback } = React;
-    const SF = window.subtranslate;        // Electron bridge (undefined when opened in a plain browser)
+    const SF = window.sublingo;        // Electron bridge (undefined when opened in a plain browser)
 
     // ── Icons ─────────────────────────────────────────────
     const sv = (...ds) => function Ico({ size=16, color='currentColor', style, className }) {
@@ -200,7 +200,7 @@
             <div style={{background:'linear-gradient(135deg,var(--tc),var(--vc))',borderRadius:10,padding:7,display:'flex'}}>
               <FilmIco size={18} color="white"/>
             </div>
-            <span className="g-text" style={{fontSize:19,fontWeight:700,letterSpacing:'-.025em'}}>SubTranslate</span>
+            <span className="g-text" style={{fontSize:19,fontWeight:700,letterSpacing:'-.025em'}}>SubLingo</span>
             <div className="fs" style={{marginLeft:4,opacity:.28}}>
               {Array.from({length:9}).map((_,i)=><div key={i} className="fs-h"/>)}
             </div>
@@ -456,7 +456,7 @@
                   <div style={{position:'absolute',inset:0,background:'linear-gradient(180deg,#0D1528 0%,#04070E 100%)'}}/>
                   <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 90% 70% at 50% 50%,transparent 30%,rgba(0,0,0,.65) 100%)'}}/>
                   <span style={{position:'absolute',top:10,left:12,fontFamily:'"JetBrains Mono",monospace',fontSize:9,color:'rgba(255,255,255,.3)',zIndex:3,letterSpacing:'.05em'}}>{last?(last.start||'').replace(',',':'):'00:00:00:000'}</span>
-                  <span style={{position:'absolute',top:10,right:12,fontFamily:'"JetBrains Mono",monospace',fontSize:9,color:'rgba(255,255,255,.22)',zIndex:3}}>SubTranslate Preview</span>
+                  <span style={{position:'absolute',top:10,right:12,fontFamily:'"JetBrains Mono",monospace',fontSize:9,color:'rgba(255,255,255,.22)',zIndex:3}}>SubLingo Preview</span>
                   {last&&<div className="hf-sub stream-in" key={last.text}>{last.text}</div>}
                 </div>
               </div>
@@ -704,7 +704,7 @@
       };
 
       const startTranslation=async()=>{
-        if(!SF){ showToast('Run inside the SubTranslate desktop app to translate'); return; }
+        if(!SF){ showToast('Run inside the SubLingo desktop app to translate'); return; }
         if(ollama.ok===false){ showToast('Ollama is not reachable — check it is running'); return; }
         if(ollama.ok&&!ollama.count){ showToast('No models installed — run e.g. `ollama pull llama3.1:8b`'); return; }
         if(!fileInfo?.raw){ showToast('Load a real .srt file to translate'); return; }

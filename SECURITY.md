@@ -1,6 +1,6 @@
 # Security Policy
 
-SubTranslate is a local desktop app. It reads the `.srt` files you open and sends their
+SubLingo is a local desktop app. It reads the `.srt` files you open and sends their
 text to the Ollama server you configure (by default `http://localhost:11434`). It does not
 talk to any other network service, and it ships no secrets.
 

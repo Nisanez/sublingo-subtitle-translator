@@ -1,4 +1,4 @@
-// engine.js — SubTranslate translation engine.
+// engine.js — SubLingo translation engine.
 // Pure Node, no dependencies. Parses SRT, merges fragments into sentences,
 // translates each sentence via Ollama's REST API (global fetch, Node 18+),
 // then redistributes the translation back across the original timed cues.

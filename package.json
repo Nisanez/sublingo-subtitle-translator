@@ -1,17 +1,17 @@
 {
-  "name": "subtranslate",
+  "name": "sublingo",
   "version": "1.0.0",
-  "description": "SubTranslate — a local AI subtitle translator (Electron + Ollama). Translates .srt files entirely on your machine.",
+  "description": "SubLingo — a local AI subtitle translator (Electron + Ollama). Translates .srt files entirely on your machine.",
   "main": "main.js",
-  "author": "SubTranslate contributors",
+  "author": "SubLingo contributors",
   "license": "MIT",
-  "homepage": "https://github.com/your-username/subtranslate#readme",
+  "homepage": "https://github.com/your-username/sublingo#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/subtranslate.git"
+    "url": "https://github.com/your-username/sublingo.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/subtranslate/issues"
+    "url": "https://github.com/your-username/sublingo/issues"
   },
   "keywords": [
     "subtitles",
@@ -36,8 +36,8 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "com.subtranslate.app",
-    "productName": "SubTranslate",
+    "appId": "com.sublingo.app",
+    "productName": "SubLingo",
     "files": [
       "main.js",
       "preload.js",

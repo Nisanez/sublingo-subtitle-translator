@@ -1,4 +1,4 @@
-# Contributing to SubTranslate
+# Contributing to SubLingo
 
 Thanks for your interest! This is a small, hackable Electron app.
 
@@ -6,7 +6,7 @@ Thanks for your interest! This is a small, hackable Electron app.
 
 ```
 main.js            Electron main process (window, IPC, file dialogs, window sizing)
-preload.js         Secure bridge exposing window.subtranslate.* to the renderer
+preload.js         Secure bridge exposing window.sublingo.* to the renderer
 engine.js          Translation engine: SRT parsing, sentence merge, Ollama calls, redistribute
 cli.js             Headless CLI over the same engine (no Electron needed)
 renderer/

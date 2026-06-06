@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const engine = require('./engine');
 
-const SETTINGS = path.join(app.getPath('userData'), 'subtranslate-settings.json');
+const SETTINGS = path.join(app.getPath('userData'), 'sublingo-settings.json');
 // Resolve the Ollama host: explicit per-call host (from UI settings) → env → default.
 const resolveHost = (host) => (host && host.trim()) || process.env.OLLAMA_URL || engine.DEFAULT_OLLAMA;
 

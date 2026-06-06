@@ -1,7 +1,7 @@
 // preload.js — secure bridge between renderer and main
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('subtranslate', {
+contextBridge.exposeInMainWorld('sublingo', {
   listModels: () => ipcRenderer.invoke('list-models'),
   pickSrt: () => ipcRenderer.invoke('pick-srt'),
   pickText: (o) => ipcRenderer.invoke('pick-text', o),
