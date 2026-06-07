@@ -155,7 +155,18 @@
       {value:'translategemma:12b',label:'translategemma:12b'},
       {value:'custom',         label:'Custom…'},
     ];
-    const CTX_PROMPT=`You are preparing a CONTEXT BRIEF for a model translating the subtitles of [TITLE], [SEASON/EPISODE], into [TARGET LANGUAGE]. Write it in English with key terms in the target language. Sections: 1) Premise & setting, 2) Tone & register, 3) Key terminology (English → target, prefer official localized names), 4) Characters & relationships — include GENDER and singular/plural and nicknames, 5) Episode-specific watch-outs, 6) Style rules. Keep it ~250–400 words.`;
+    const CTX_PROMPT=`You are writing a CONTEXT BRIEF that will be given to a small local AI model translating the subtitles of [TITLE] ([SEASON/EPISODE], or "film") into [TARGET LANGUAGE]. The brief is prepended to every translation request, so keep it accurate, concrete and tight (~250–400 words). Write in English, but give all names, terms and example phrasings in [TARGET LANGUAGE]. Only include facts you are confident about — omit or clearly flag anything uncertain (a wrong character gender is worse than none).
+
+Use these numbered sections:
+1) Premise & setting — 2–4 sentences: what it is, genre, where/when it takes place, and anything that affects word choice.
+2) Tone & register — the speaking style to use in [TARGET LANGUAGE] (casual/formal, era, comedic/serious). Note forms of address: who speaks formally vs informally to whom (e.g. tu/vous, אתה/את), and the default when unclear.
+3) Characters & relationships (MOST IMPORTANT) — for each main character give: the [TARGET LANGUAGE] spelling of the name, GENDER (for grammatical agreement), singular/plural, nicknames, and their relationships to each other.
+4) Key terminology (English → [TARGET LANGUAGE]) — proper nouns, places, and in-world jargon; prefer official localized names, and mark any that must be kept EXACTLY.
+5) Idioms, slang & catchphrases (English → natural [TARGET LANGUAGE]) — recurring expressions, phrasal verbs, exclamations and sound effects, with the natural everyday equivalent a native speaker would use (never literal or invented).
+6) Watch-outs — words that look like names but aren't (or vice-versa), running jokes, on-screen captions, and anything easy to mistranslate.
+7) Style rules — a few imperatives, e.g. keep lines short; spoken register; consistent name spellings; and any [TARGET LANGUAGE] conventions (for Hebrew/Arabic: no nikud/diacritics).
+
+Output only the brief, starting at "1)". No preamble.`;
 
     // ── Small components ───────────────────────────────────
     function TCChip({start,end}) {
