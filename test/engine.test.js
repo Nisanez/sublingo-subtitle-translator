@@ -70,4 +70,20 @@ test('extractNameCandidates finds names, skips lone sentence-initial caps', () =
   assert.ok(!names.includes('Welcome'));      // lone sentence-initial capital -> skipped
 });
 
+test('parseMarkedResponse handles renamed/merged markers and never leaks them', () => {
+  // The model renamed <<<SUBTITLE n>>> to <<<SUBSTITUTION n>>> and merged cues.
+  const out = '<<<SUBTITLE 0>>>\nשקט, מצלמים!\n<<<SUBSTITUTION 1>>>\nאין לנו זמן!';
+  const r = e.parseMarkedResponse(out, ['Quiet, rolling!', "We're out of time!"]);
+  assert.strictEqual(r[0], 'שקט, מצלמים!');                 // not merged with the next cue
+  assert.strictEqual(r[1], 'אין לנו זמן!');                 // recognized despite the renamed word
+  assert.ok(!r.join('\n').includes('<<<'), 'no marker tokens leak into output');
+});
+
+test('parseMarkedResponse falls back to source for a dropped marker', () => {
+  const out = '<<<SUBTITLE 0>>>\nשלום';                      // marker 1 missing
+  const r = e.parseMarkedResponse(out, ['Hello', 'World']);
+  assert.strictEqual(r[0], 'שלום');
+  assert.strictEqual(r[1], 'World');                        // kept original
+});
+
 console.log(`\n${passed} passed`);

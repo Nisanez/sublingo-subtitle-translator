@@ -11,7 +11,11 @@ const DEFAULT_TIMEOUT_MS = 120000; // per-request translation timeout
 const DEFAULT_CONTEXT = '';
 
 const SEP = (n) => `<<<SUBTITLE ${n}>>>`;
-const SEP_RE = /<<<SUBTITLE\s+(\d+)>>>/g;
+// Match a marker by its NUMBER regardless of the word, because small models often
+// rename it (SUBTITLE -> SUBSTITUTION / SUBTITULO / …) or drop the word entirely.
+const SEP_RE = /<<<\s*[A-Za-z_]*\s*(\d+)\s*>>>/g;
+// Anything that still looks like a marker, to scrub out of the final text.
+const STRAY_MARKER_RE = /<<<[^>]*>>>/g;
 const TERMINAL_RE = /[.!?…]["')\]»”’]*\s*$/;
 
 // ── SRT parsing ───────────────────────────────────────────
@@ -136,9 +140,11 @@ function buildPrompt(texts, srcLang, tgtLang, glossary, primer, prevLines, summa
     `Translate the subtitle texts below ${srcPart}to ${tgtLang}.\n` +
     'Each subtitle is preceded by a marker line like <<<SUBTITLE 0>>>.\n' +
     'Rules:\n' +
-    '- Keep every marker line EXACTLY as-is, on its own line.\n' +
-    '- Translate ONLY the text under each marker.\n' +
-    '- Preserve line breaks within each subtitle.\n' +
+    '- Copy each marker character-for-character: it is literally <<<SUBTITLE n>>>. ' +
+    'Do NOT rename it (never SUBSTITUTION/SUBTITULO/etc.), translate it, or change its number.\n' +
+    '- Output exactly one marker per subtitle, in the same order, then its translation.\n' +
+    '- Translate ONLY the text under each marker; never merge two subtitles under one marker.\n' +
+    '- Every subtitle must be translated — do not leave any text in the source language.\n' +
     '- Output nothing but the markers and translations.\n\n' +
     joined);
   return sections.join('\n\n');
@@ -199,23 +205,29 @@ async function callOllama(baseUrl, model, prompt, signal, timeoutMs = DEFAULT_TI
   return (data.response || '').trim();
 }
 
+// Parse a model response back into one translation per input, keyed by marker NUMBER.
+// Tolerant of renamed markers and slices strictly between markers; falls back to the
+// original text for any marker the model dropped. Pure + exported so it can be tested.
+function parseMarkedResponse(out, texts) {
+  const result = {};
+  const marks = [];
+  let m;
+  SEP_RE.lastIndex = 0;
+  while ((m = SEP_RE.exec(out)) !== null) marks.push({ idx: parseInt(m[1], 10), start: m.index, end: m.index + m[0].length });
+  for (let j = 0; j < marks.length; j++) {
+    const from = marks[j].end;
+    const to = j + 1 < marks.length ? marks[j + 1].start : out.length;
+    const piece = out.slice(from, to).replace(STRAY_MARKER_RE, '').trim();
+    if (result[marks[j].idx] === undefined) result[marks[j].idx] = piece;
+  }
+  return texts.map((t, i) => (result[i] !== undefined ? result[i] : t));
+}
+
 async function translateBatch(texts, opts, prevLines, signal) {
   const prompt = buildPrompt(texts, opts.srcLang, opts.tgtLang, opts.glossary,
     opts.primer, prevLines, opts.summary);
   const out = await callOllama(opts.baseUrl, opts.model, prompt, signal, opts.timeoutMs);
-
-  const result = {};
-  let m;
-  SEP_RE.lastIndex = 0;
-  const idxs = []; const positions = [];
-  while ((m = SEP_RE.exec(out)) !== null) { idxs.push(parseInt(m[1], 10)); positions.push(m.index + m[0].length); }
-  for (let j = 0; j < idxs.length; j++) {
-    const from = positions[j];
-    const to = j + 1 < idxs.length ? out.indexOf('<<<SUBTITLE', from) : out.length;
-    result[idxs[j]] = out.slice(from, to < 0 ? out.length : to).trim();
-  }
-  // fallback to source for any dropped marker
-  return texts.map((t, i) => (result[i] !== undefined ? result[i] : t));
+  return parseMarkedResponse(out, texts);
 }
 
 function tailLines(translatedTexts, n) {
@@ -384,6 +396,6 @@ async function translateAll(options, onProgress, signal) {
 module.exports = {
   DEFAULT_OLLAMA, DEFAULT_CONTEXT, DEFAULT_TIMEOUT_MS,
   parseSrt, blockText, loadGlossary, segmentIntoSentences, buildGroups,
-  redistribute, buildPrompt, callOllama, checkOllama, translateBatch, tailLines,
+  redistribute, buildPrompt, callOllama, checkOllama, translateBatch, parseMarkedResponse, tailLines,
   resolveSelection, extractNameCandidates, glossaryTemplate, translateAll, timingParts,
 };
