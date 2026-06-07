@@ -137,15 +137,22 @@ function buildPrompt(texts, srcLang, tgtLang, glossary, primer, prevLines, summa
   }
   const joined = texts.map((t, i) => `${SEP(i)}\n${t}`).join('\n');
   sections.push(
-    `Translate the subtitle texts below ${srcPart}to ${tgtLang}.\n` +
-    'Each subtitle is preceded by a marker line like <<<SUBTITLE 0>>>.\n' +
-    'Rules:\n' +
-    '- Copy each marker character-for-character: it is literally <<<SUBTITLE n>>>. ' +
-    'Do NOT rename it (never SUBSTITUTION/SUBTITULO/etc.), translate it, or change its number.\n' +
-    '- Output exactly one marker per subtitle, in the same order, then its translation.\n' +
-    '- Translate ONLY the text under each marker; never merge two subtitles under one marker.\n' +
-    '- Every subtitle must be translated — do not leave any text in the source language.\n' +
-    '- Output nothing but the markers and translations.\n\n' +
+    `You are a professional subtitle translator. Translate the subtitles below ${srcPart}into ` +
+    `natural, fluent ${tgtLang} the way a native speaker really speaks.\n\n` +
+    'Translation guidelines:\n' +
+    '- Translate the MEANING, not word-for-word. Render idioms, slang and phrasal verbs with ' +
+    'the natural everyday equivalent — never a literal or invented word.\n' +
+    '- If unsure of a term, use the most natural common phrasing. Never make up a word or guess at spelling.\n' +
+    '- Match spoken dialogue: casual, concise and contemporary.\n' +
+    '- Keep each line about as short as the source so it fits on screen.\n' +
+    '- Keep proper names, numbers and any formatting/italic tags unchanged; preserve the original punctuation and ellipses (…).\n' +
+    `- Do not add pronunciation or vowel diacritics that are not normally written in ${tgtLang}.\n` +
+    `- Output ONLY in ${tgtLang}. Never leave text in the source language, and never add notes, explanations or romanization.\n\n` +
+    'Format rules:\n' +
+    '- Each subtitle is preceded by a marker line, exactly <<<SUBTITLE n>>>.\n' +
+    '- Copy each marker character-for-character — do NOT rename it (never SUBSTITUTION/SUBTITULO/etc.), translate it, or change its number.\n' +
+    '- Output one marker per subtitle, in the same order, then its translation.\n' +
+    '- Never merge two subtitles under one marker. Output nothing but the markers and translations.\n\n' +
     joined);
   return sections.join('\n\n');
 }
